@@ -1,0 +1,157 @@
+! ieee69_paper_reconstruction.dss
+!
+! Modified IEEE/PG&E 69-bus feeder (project spec section 19), generated
+! PROGRAMMATICALLY by gen_ieee69_dss.py from src/model/ieee69_data.py (the
+! same official-data module experiments/exp04_69bus.py's
+! build_69bus_system() uses), to avoid hand-transcription errors across 65
+! regular branches. This is the OpenDSS-side twin of build_69bus_system()
+! -- see that function's docstring for the full reconstruction rationale
+! (balanced three-phase treatment, the 3-4/3-28/3-36 branch-replacement
+! reading, the 13.8kV-vs-12.66kV voltage-base discrepancy). Regenerate
+! with gen_ieee69_dss.py if ieee69_data.py ever changes -- do not hand-edit
+! this file's branch/load lists.
+!
+! Regular branches use R1/X1/R0/X0 (no mutual coupling, matching the
+! Python reconstruction's diagonal Yprim = (1/z)*I stamp for a balanced
+! single-phase-equivalent feeder) with Length=1, units=none, so R1/X1 are
+! literal ohms, matching src/model/ieee69_data.py's BRANCHES_OHM directly
+! (independently verified against this exact R1/X1/R0/X0 syntax via an
+! isolated single-branch OpenDSS sub-circuit before trusting the full
+! comparison -- see the commit that added this file).
+
+Clear
+Set DefaultBaseFrequency=60
+
+new circuit.IEEE69_Paper_Reconstruction
+~ basekv=12.66 pu=1.0 phases=3 bus1=BUS1
+~ MVAsc3=1e9 MVAsc1=1e9
+
+New Transformer.T34 Phases=3 Windings=2 Xhl=0.18
+~ wdg=1 bus=BUS3 conn=wye   kv=12.66 kva=10000 %r=0.034999999999999996
+~ wdg=2 bus=BUS4 conn=delta kv=12.66 kva=10000 %r=0.034999999999999996
+New Transformer.T328 Phases=3 Windings=2 Xhl=0.5599999999999999
+~ wdg=1 bus=BUS3 conn=wye   kv=12.66 kva=10000 %r=0.11499999999999999
+~ wdg=2 bus=BUS28 conn=delta kv=12.66 kva=10000 %r=0.11499999999999999
+New Transformer.T336 Phases=3 Windings=2 Xhl=0.5599999999999999
+~ wdg=1 bus=BUS3 conn=wye   kv=12.66 kva=10000 %r=0.11499999999999999
+~ wdg=2 bus=BUS36 conn=delta kv=12.66 kva=10000 %r=0.11499999999999999
+
+New Line.L1_2 Phases=3 Bus1=BUS1.1.2.3 Bus2=BUS2.1.2.3 R1=0.0005 X1=0.0012 R0=0.0005 X0=0.0012 C1=0 C0=0 Length=1 units=none
+New Line.L2_3 Phases=3 Bus1=BUS2.1.2.3 Bus2=BUS3.1.2.3 R1=0.0005 X1=0.0012 R0=0.0005 X0=0.0012 C1=0 C0=0 Length=1 units=none
+New Line.L4_5 Phases=3 Bus1=BUS4.1.2.3 Bus2=BUS5.1.2.3 R1=0.0251 X1=0.0294 R0=0.0251 X0=0.0294 C1=0 C0=0 Length=1 units=none
+New Line.L5_6 Phases=3 Bus1=BUS5.1.2.3 Bus2=BUS6.1.2.3 R1=0.366 X1=0.1864 R0=0.366 X0=0.1864 C1=0 C0=0 Length=1 units=none
+New Line.L6_7 Phases=3 Bus1=BUS6.1.2.3 Bus2=BUS7.1.2.3 R1=0.381 X1=0.1941 R0=0.381 X0=0.1941 C1=0 C0=0 Length=1 units=none
+New Line.L7_8 Phases=3 Bus1=BUS7.1.2.3 Bus2=BUS8.1.2.3 R1=0.0922 X1=0.047 R0=0.0922 X0=0.047 C1=0 C0=0 Length=1 units=none
+New Line.L8_9 Phases=3 Bus1=BUS8.1.2.3 Bus2=BUS9.1.2.3 R1=0.0493 X1=0.0251 R0=0.0493 X0=0.0251 C1=0 C0=0 Length=1 units=none
+New Line.L9_10 Phases=3 Bus1=BUS9.1.2.3 Bus2=BUS10.1.2.3 R1=0.819 X1=0.2707 R0=0.819 X0=0.2707 C1=0 C0=0 Length=1 units=none
+New Line.L10_11 Phases=3 Bus1=BUS10.1.2.3 Bus2=BUS11.1.2.3 R1=0.1872 X1=0.0619 R0=0.1872 X0=0.0619 C1=0 C0=0 Length=1 units=none
+New Line.L11_12 Phases=3 Bus1=BUS11.1.2.3 Bus2=BUS12.1.2.3 R1=0.7114 X1=0.2351 R0=0.7114 X0=0.2351 C1=0 C0=0 Length=1 units=none
+New Line.L12_13 Phases=3 Bus1=BUS12.1.2.3 Bus2=BUS13.1.2.3 R1=1.03 X1=0.34 R0=1.03 X0=0.34 C1=0 C0=0 Length=1 units=none
+New Line.L13_14 Phases=3 Bus1=BUS13.1.2.3 Bus2=BUS14.1.2.3 R1=1.044 X1=0.34 R0=1.044 X0=0.34 C1=0 C0=0 Length=1 units=none
+New Line.L14_15 Phases=3 Bus1=BUS14.1.2.3 Bus2=BUS15.1.2.3 R1=1.058 X1=0.3496 R0=1.058 X0=0.3496 C1=0 C0=0 Length=1 units=none
+New Line.L15_16 Phases=3 Bus1=BUS15.1.2.3 Bus2=BUS16.1.2.3 R1=0.1966 X1=0.065 R0=0.1966 X0=0.065 C1=0 C0=0 Length=1 units=none
+New Line.L16_17 Phases=3 Bus1=BUS16.1.2.3 Bus2=BUS17.1.2.3 R1=0.3744 X1=0.1238 R0=0.3744 X0=0.1238 C1=0 C0=0 Length=1 units=none
+New Line.L17_18 Phases=3 Bus1=BUS17.1.2.3 Bus2=BUS18.1.2.3 R1=0.0047 X1=0.0016 R0=0.0047 X0=0.0016 C1=0 C0=0 Length=1 units=none
+New Line.L18_19 Phases=3 Bus1=BUS18.1.2.3 Bus2=BUS19.1.2.3 R1=0.3276 X1=0.1083 R0=0.3276 X0=0.1083 C1=0 C0=0 Length=1 units=none
+New Line.L19_20 Phases=3 Bus1=BUS19.1.2.3 Bus2=BUS20.1.2.3 R1=0.2106 X1=0.069 R0=0.2106 X0=0.069 C1=0 C0=0 Length=1 units=none
+New Line.L20_21 Phases=3 Bus1=BUS20.1.2.3 Bus2=BUS21.1.2.3 R1=0.3416 X1=0.1129 R0=0.3416 X0=0.1129 C1=0 C0=0 Length=1 units=none
+New Line.L21_22 Phases=3 Bus1=BUS21.1.2.3 Bus2=BUS22.1.2.3 R1=0.014 X1=0.0046 R0=0.014 X0=0.0046 C1=0 C0=0 Length=1 units=none
+New Line.L22_23 Phases=3 Bus1=BUS22.1.2.3 Bus2=BUS23.1.2.3 R1=0.1591 X1=0.0526 R0=0.1591 X0=0.0526 C1=0 C0=0 Length=1 units=none
+New Line.L23_24 Phases=3 Bus1=BUS23.1.2.3 Bus2=BUS24.1.2.3 R1=0.3463 X1=0.1145 R0=0.3463 X0=0.1145 C1=0 C0=0 Length=1 units=none
+New Line.L24_25 Phases=3 Bus1=BUS24.1.2.3 Bus2=BUS25.1.2.3 R1=0.7488 X1=0.2475 R0=0.7488 X0=0.2475 C1=0 C0=0 Length=1 units=none
+New Line.L25_26 Phases=3 Bus1=BUS25.1.2.3 Bus2=BUS26.1.2.3 R1=0.3089 X1=0.1021 R0=0.3089 X0=0.1021 C1=0 C0=0 Length=1 units=none
+New Line.L26_27 Phases=3 Bus1=BUS26.1.2.3 Bus2=BUS27.1.2.3 R1=0.1732 X1=0.0572 R0=0.1732 X0=0.0572 C1=0 C0=0 Length=1 units=none
+New Line.L28_29 Phases=3 Bus1=BUS28.1.2.3 Bus2=BUS29.1.2.3 R1=0.064 X1=0.1565 R0=0.064 X0=0.1565 C1=0 C0=0 Length=1 units=none
+New Line.L29_30 Phases=3 Bus1=BUS29.1.2.3 Bus2=BUS30.1.2.3 R1=0.3978 X1=0.1315 R0=0.3978 X0=0.1315 C1=0 C0=0 Length=1 units=none
+New Line.L30_31 Phases=3 Bus1=BUS30.1.2.3 Bus2=BUS31.1.2.3 R1=0.0702 X1=0.0232 R0=0.0702 X0=0.0232 C1=0 C0=0 Length=1 units=none
+New Line.L31_32 Phases=3 Bus1=BUS31.1.2.3 Bus2=BUS32.1.2.3 R1=0.351 X1=0.116 R0=0.351 X0=0.116 C1=0 C0=0 Length=1 units=none
+New Line.L32_33 Phases=3 Bus1=BUS32.1.2.3 Bus2=BUS33.1.2.3 R1=0.839 X1=0.2816 R0=0.839 X0=0.2816 C1=0 C0=0 Length=1 units=none
+New Line.L33_34 Phases=3 Bus1=BUS33.1.2.3 Bus2=BUS34.1.2.3 R1=1.708 X1=0.5646 R0=1.708 X0=0.5646 C1=0 C0=0 Length=1 units=none
+New Line.L34_35 Phases=3 Bus1=BUS34.1.2.3 Bus2=BUS35.1.2.3 R1=1.474 X1=0.4873 R0=1.474 X0=0.4873 C1=0 C0=0 Length=1 units=none
+New Line.L36_37 Phases=3 Bus1=BUS36.1.2.3 Bus2=BUS37.1.2.3 R1=0.064 X1=0.1565 R0=0.064 X0=0.1565 C1=0 C0=0 Length=1 units=none
+New Line.L37_38 Phases=3 Bus1=BUS37.1.2.3 Bus2=BUS38.1.2.3 R1=0.1053 X1=0.123 R0=0.1053 X0=0.123 C1=0 C0=0 Length=1 units=none
+New Line.L38_39 Phases=3 Bus1=BUS38.1.2.3 Bus2=BUS39.1.2.3 R1=0.0304 X1=0.0355 R0=0.0304 X0=0.0355 C1=0 C0=0 Length=1 units=none
+New Line.L39_40 Phases=3 Bus1=BUS39.1.2.3 Bus2=BUS40.1.2.3 R1=0.0018 X1=0.0021 R0=0.0018 X0=0.0021 C1=0 C0=0 Length=1 units=none
+New Line.L40_41 Phases=3 Bus1=BUS40.1.2.3 Bus2=BUS41.1.2.3 R1=0.7283 X1=0.8509 R0=0.7283 X0=0.8509 C1=0 C0=0 Length=1 units=none
+New Line.L41_42 Phases=3 Bus1=BUS41.1.2.3 Bus2=BUS42.1.2.3 R1=0.31 X1=0.3623 R0=0.31 X0=0.3623 C1=0 C0=0 Length=1 units=none
+New Line.L42_43 Phases=3 Bus1=BUS42.1.2.3 Bus2=BUS43.1.2.3 R1=0.041 X1=0.0478 R0=0.041 X0=0.0478 C1=0 C0=0 Length=1 units=none
+New Line.L43_44 Phases=3 Bus1=BUS43.1.2.3 Bus2=BUS44.1.2.3 R1=0.0092 X1=0.0116 R0=0.0092 X0=0.0116 C1=0 C0=0 Length=1 units=none
+New Line.L44_45 Phases=3 Bus1=BUS44.1.2.3 Bus2=BUS45.1.2.3 R1=0.1089 X1=0.1373 R0=0.1089 X0=0.1373 C1=0 C0=0 Length=1 units=none
+New Line.L45_46 Phases=3 Bus1=BUS45.1.2.3 Bus2=BUS46.1.2.3 R1=0.0009 X1=0.0012 R0=0.0009 X0=0.0012 C1=0 C0=0 Length=1 units=none
+New Line.L4_47 Phases=3 Bus1=BUS4.1.2.3 Bus2=BUS47.1.2.3 R1=0.0034 X1=0.0084 R0=0.0034 X0=0.0084 C1=0 C0=0 Length=1 units=none
+New Line.L47_48 Phases=3 Bus1=BUS47.1.2.3 Bus2=BUS48.1.2.3 R1=0.0851 X1=0.2083 R0=0.0851 X0=0.2083 C1=0 C0=0 Length=1 units=none
+New Line.L48_49 Phases=3 Bus1=BUS48.1.2.3 Bus2=BUS49.1.2.3 R1=0.2898 X1=0.7091 R0=0.2898 X0=0.7091 C1=0 C0=0 Length=1 units=none
+New Line.L49_50 Phases=3 Bus1=BUS49.1.2.3 Bus2=BUS50.1.2.3 R1=0.0822 X1=0.2011 R0=0.0822 X0=0.2011 C1=0 C0=0 Length=1 units=none
+New Line.L8_51 Phases=3 Bus1=BUS8.1.2.3 Bus2=BUS51.1.2.3 R1=0.0928 X1=0.0473 R0=0.0928 X0=0.0473 C1=0 C0=0 Length=1 units=none
+New Line.L51_52 Phases=3 Bus1=BUS51.1.2.3 Bus2=BUS52.1.2.3 R1=0.3319 X1=0.114 R0=0.3319 X0=0.114 C1=0 C0=0 Length=1 units=none
+New Line.L9_53 Phases=3 Bus1=BUS9.1.2.3 Bus2=BUS53.1.2.3 R1=0.174 X1=0.0886 R0=0.174 X0=0.0886 C1=0 C0=0 Length=1 units=none
+New Line.L53_54 Phases=3 Bus1=BUS53.1.2.3 Bus2=BUS54.1.2.3 R1=0.203 X1=0.1034 R0=0.203 X0=0.1034 C1=0 C0=0 Length=1 units=none
+New Line.L54_55 Phases=3 Bus1=BUS54.1.2.3 Bus2=BUS55.1.2.3 R1=0.2842 X1=0.1447 R0=0.2842 X0=0.1447 C1=0 C0=0 Length=1 units=none
+New Line.L55_56 Phases=3 Bus1=BUS55.1.2.3 Bus2=BUS56.1.2.3 R1=0.2813 X1=0.1433 R0=0.2813 X0=0.1433 C1=0 C0=0 Length=1 units=none
+New Line.L56_57 Phases=3 Bus1=BUS56.1.2.3 Bus2=BUS57.1.2.3 R1=1.59 X1=0.5337 R0=1.59 X0=0.5337 C1=0 C0=0 Length=1 units=none
+New Line.L57_58 Phases=3 Bus1=BUS57.1.2.3 Bus2=BUS58.1.2.3 R1=0.7837 X1=0.263 R0=0.7837 X0=0.263 C1=0 C0=0 Length=1 units=none
+New Line.L58_59 Phases=3 Bus1=BUS58.1.2.3 Bus2=BUS59.1.2.3 R1=0.3042 X1=0.1006 R0=0.3042 X0=0.1006 C1=0 C0=0 Length=1 units=none
+New Line.L59_60 Phases=3 Bus1=BUS59.1.2.3 Bus2=BUS60.1.2.3 R1=0.3861 X1=0.1172 R0=0.3861 X0=0.1172 C1=0 C0=0 Length=1 units=none
+New Line.L60_61 Phases=3 Bus1=BUS60.1.2.3 Bus2=BUS61.1.2.3 R1=0.5075 X1=0.2585 R0=0.5075 X0=0.2585 C1=0 C0=0 Length=1 units=none
+New Line.L61_62 Phases=3 Bus1=BUS61.1.2.3 Bus2=BUS62.1.2.3 R1=0.0974 X1=0.0496 R0=0.0974 X0=0.0496 C1=0 C0=0 Length=1 units=none
+New Line.L62_63 Phases=3 Bus1=BUS62.1.2.3 Bus2=BUS63.1.2.3 R1=0.145 X1=0.0738 R0=0.145 X0=0.0738 C1=0 C0=0 Length=1 units=none
+New Line.L63_64 Phases=3 Bus1=BUS63.1.2.3 Bus2=BUS64.1.2.3 R1=0.7105 X1=0.3619 R0=0.7105 X0=0.3619 C1=0 C0=0 Length=1 units=none
+New Line.L64_65 Phases=3 Bus1=BUS64.1.2.3 Bus2=BUS65.1.2.3 R1=1.041 X1=0.5302 R0=1.041 X0=0.5302 C1=0 C0=0 Length=1 units=none
+New Line.L11_66 Phases=3 Bus1=BUS11.1.2.3 Bus2=BUS66.1.2.3 R1=0.2012 X1=0.0611 R0=0.2012 X0=0.0611 C1=0 C0=0 Length=1 units=none
+New Line.L66_67 Phases=3 Bus1=BUS66.1.2.3 Bus2=BUS67.1.2.3 R1=0.0047 X1=0.0014 R0=0.0047 X0=0.0014 C1=0 C0=0 Length=1 units=none
+New Line.L12_68 Phases=3 Bus1=BUS12.1.2.3 Bus2=BUS68.1.2.3 R1=0.7394 X1=0.2444 R0=0.7394 X0=0.2444 C1=0 C0=0 Length=1 units=none
+New Line.L68_69 Phases=3 Bus1=BUS68.1.2.3 Bus2=BUS69.1.2.3 R1=0.0047 X1=0.0016 R0=0.0047 X0=0.0016 C1=0 C0=0 Length=1 units=none
+
+New Load.LD6 Bus1=BUS6.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=2.6000 kvar=2.2000 vminpu=0 vmaxpu=100
+New Load.LD7 Bus1=BUS7.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=40.4000 kvar=30.0000 vminpu=0 vmaxpu=100
+New Load.LD8 Bus1=BUS8.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=75.0000 kvar=54.0000 vminpu=0 vmaxpu=100
+New Load.LD9 Bus1=BUS9.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=30.0000 kvar=22.0000 vminpu=0 vmaxpu=100
+New Load.LD10 Bus1=BUS10.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=28.0000 kvar=19.0000 vminpu=0 vmaxpu=100
+New Load.LD11 Bus1=BUS11.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=145.0000 kvar=104.0000 vminpu=0 vmaxpu=100
+New Load.LD12 Bus1=BUS12.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=145.0000 kvar=104.0000 vminpu=0 vmaxpu=100
+New Load.LD13 Bus1=BUS13.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=8.0000 kvar=5.5000 vminpu=0 vmaxpu=100
+New Load.LD14 Bus1=BUS14.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=8.0000 kvar=5.5000 vminpu=0 vmaxpu=100
+New Load.LD16 Bus1=BUS16.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=45.5000 kvar=30.0000 vminpu=0 vmaxpu=100
+New Load.LD17 Bus1=BUS17.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=60.0000 kvar=35.0000 vminpu=0 vmaxpu=100
+New Load.LD18 Bus1=BUS18.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=60.0000 kvar=35.0000 vminpu=0 vmaxpu=100
+New Load.LD20 Bus1=BUS20.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=1.0000 kvar=0.6000 vminpu=0 vmaxpu=100
+New Load.LD21 Bus1=BUS21.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=114.0000 kvar=81.0000 vminpu=0 vmaxpu=100
+New Load.LD22 Bus1=BUS22.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=5.3000 kvar=3.5000 vminpu=0 vmaxpu=100
+New Load.LD24 Bus1=BUS24.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=28.0000 kvar=20.0000 vminpu=0 vmaxpu=100
+New Load.LD26 Bus1=BUS26.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=14.0000 kvar=10.0000 vminpu=0 vmaxpu=100
+New Load.LD27 Bus1=BUS27.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=14.0000 kvar=10.0000 vminpu=0 vmaxpu=100
+New Load.LD28 Bus1=BUS28.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=26.0000 kvar=18.6000 vminpu=0 vmaxpu=100
+New Load.LD29 Bus1=BUS29.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=26.0000 kvar=18.6000 vminpu=0 vmaxpu=100
+New Load.LD33 Bus1=BUS33.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=14.0000 kvar=10.0000 vminpu=0 vmaxpu=100
+New Load.LD34 Bus1=BUS34.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=19.5000 kvar=14.0000 vminpu=0 vmaxpu=100
+New Load.LD35 Bus1=BUS35.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=6.0000 kvar=4.0000 vminpu=0 vmaxpu=100
+New Load.LD36 Bus1=BUS36.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=26.0000 kvar=18.6000 vminpu=0 vmaxpu=100
+New Load.LD37 Bus1=BUS37.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=26.0000 kvar=18.6000 vminpu=0 vmaxpu=100
+New Load.LD39 Bus1=BUS39.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=24.0000 kvar=17.0000 vminpu=0 vmaxpu=100
+New Load.LD40 Bus1=BUS40.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=24.0000 kvar=17.0000 vminpu=0 vmaxpu=100
+New Load.LD41 Bus1=BUS41.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=1.2000 kvar=1.0000 vminpu=0 vmaxpu=100
+New Load.LD43 Bus1=BUS43.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=6.0000 kvar=4.3000 vminpu=0 vmaxpu=100
+New Load.LD45 Bus1=BUS45.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=39.2000 kvar=26.3000 vminpu=0 vmaxpu=100
+New Load.LD46 Bus1=BUS46.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=39.2000 kvar=26.3000 vminpu=0 vmaxpu=100
+New Load.LD48 Bus1=BUS48.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=79.0000 kvar=56.4000 vminpu=0 vmaxpu=100
+New Load.LD49 Bus1=BUS49.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=384.7000 kvar=274.5000 vminpu=0 vmaxpu=100
+New Load.LD50 Bus1=BUS50.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=384.7000 kvar=274.5000 vminpu=0 vmaxpu=100
+New Load.LD51 Bus1=BUS51.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=40.5000 kvar=28.3000 vminpu=0 vmaxpu=100
+New Load.LD52 Bus1=BUS52.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=3.6000 kvar=2.7000 vminpu=0 vmaxpu=100
+New Load.LD53 Bus1=BUS53.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=4.3000 kvar=3.5000 vminpu=0 vmaxpu=100
+New Load.LD54 Bus1=BUS54.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=26.4000 kvar=19.0000 vminpu=0 vmaxpu=100
+New Load.LD55 Bus1=BUS55.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=24.0000 kvar=17.2000 vminpu=0 vmaxpu=100
+New Load.LD59 Bus1=BUS59.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=100.0000 kvar=72.0000 vminpu=0 vmaxpu=100
+New Load.LD61 Bus1=BUS61.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=1244.0000 kvar=888.0000 vminpu=0 vmaxpu=100
+New Load.LD62 Bus1=BUS62.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=32.0000 kvar=23.0000 vminpu=0 vmaxpu=100
+New Load.LD64 Bus1=BUS64.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=227.0000 kvar=162.0000 vminpu=0 vmaxpu=100
+New Load.LD65 Bus1=BUS65.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=59.0000 kvar=42.0000 vminpu=0 vmaxpu=100
+New Load.LD66 Bus1=BUS66.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=18.0000 kvar=13.0000 vminpu=0 vmaxpu=100
+New Load.LD67 Bus1=BUS67.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=18.0000 kvar=13.0000 vminpu=0 vmaxpu=100
+New Load.LD68 Bus1=BUS68.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=28.0000 kvar=20.0000 vminpu=0 vmaxpu=100
+New Load.LD69 Bus1=BUS69.1.2.3 Phases=3 Conn=Wye Model=1 kV=12.66 kW=28.0000 kvar=20.0000 vminpu=0 vmaxpu=100
+
+Set Voltagebases=[12.66]
+calcv
+set maxiterations=100
+Solve
