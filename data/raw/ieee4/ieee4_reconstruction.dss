@@ -1,0 +1,45 @@
+! data/raw/ieee4/ieee4_reconstruction.dss
+! Reconstruction of Member A's exp01_4bus.py topology.
+! Base: S_base = 6 MVA (transformer nameplate — CONFIRMED? see provenance.yml)
+! Topology: BUS1(slack) -- Line1 -- BUS2 -- [Yg-Delta xfmr] -- BUS3 -- Line2 -- BUS4
+
+Clear
+
+New Circuit.IEEE4_Reconstruction
+~ basekv=12.47 pu=1.0 phases=3 bus1=BUS1 angle=0 frequency=60
+~ MVAsc3=1e6 MVAsc1=1e6   ! stiff slack: matches Member A's fixed-voltage slack bus
+
+! --- Line 1: BUS1-BUS2, z = 0.01 + j0.03 pu on 12.47kV/6MVA base ---
+! Zbase_HV = 12.47^2 / 6 = 25.9201 ohm
+! R1 = 0.01 * 25.9201 = 0.259201 ohm ; X1 = 0.03 * 25.9201 = 0.777603 ohm
+New Linecode.LC1 nphases=3 basefreq=60 R1=0.259201 X1=0.777603 R0=0.259201 X0=0.777603 units=km
+New Line.LINE1 bus1=BUS1 bus2=BUS2 linecode=LC1 length=1 units=km phases=3
+
+! --- Transformer: BUS2-BUS3, Yg-Delta, 6MVA, 12.47/4.16kV, R=1%, X=6% ---
+New Transformer.XFMR1 phases=3 windings=2 xhl=6.0
+~ wdg=1 bus=BUS2 conn=wye kv=12.47 kva=6000 %r=0.5
+~ wdg=2 bus=BUS3 conn=delta kv=4.16 kva=6000 %r=0.5
+! %r split 0.5/0.5 so total %R across both windings = 1.0% = R=0.01 pu.
+! Primary wye is left ungrounded-neutral vs grounded — SET EXPLICITLY:
+~ wdg=1 conn=wye Rneut=0 Xneut=0   ! grounded wye (Yg) primary — matches ground_primary_admittance=0.0 meaning solidly grounded, not floating
+
+! --- Line 2: BUS3-BUS4, z = 0.02 + j0.02 pu on 4.16kV/6MVA base ---
+! Zbase_LV = 4.16^2 / 6 = 2.88427 ohm
+! R2 = 0.02 * 2.88427 = 0.057685 ohm ; X2 = same = 0.057685 ohm
+New Linecode.LC2 nphases=3 basefreq=60 R1=0.057685 X1=0.057685 R0=0.057685 X0=0.057685 units=km
+New Line.LINE2 bus1=BUS3 bus2=BUS4 linecode=LC2 length=1 units=km phases=3
+
+! --- Loads (per-phase pu * 6000 kVA base = kW/kvar; CASE A values shown, load ON) ---
+New Load.LOAD_BUS2 bus1=BUS2 phases=3 conn=wye kv=12.47 kw=300 kvar=120 model=1
+! 0.05*6000=300kW, 0.02*6000=120kvar per Member A's BUS2 P_spec/Q_spec, x3 phases
+
+New Load.LOAD_BUS3 bus1=BUS3 phases=3 conn=delta kv=4.16 kw=600 kvar=240 model=1
+! CASE A: 0.10*6000=600kW, 0.04*6000=240kvar. For CASE B set kw=0 kvar=0.
+
+New Load.LOAD_BUS4 bus1=BUS4 phases=3 conn=delta kv=4.16 kw=900 kvar=360 model=1
+! CASE A: 0.15*6000=900kW, 0.06*6000=360kvar. For CASE B set kw=0 kvar=0.
+
+Set VoltageBases=[12.47, 4.16]
+CalcVoltageBases
+Set Tolerance=0.0000001
+Set MaxIterations=100
