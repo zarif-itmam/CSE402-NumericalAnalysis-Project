@@ -1,0 +1,323 @@
+# data/provenance.yml
+feeders:
+  ieee4_reconstruction:
+    description: >
+      Not an official IEEE test-feeder download. Reconstructs the
+      4-bus topology defined in src team member A's
+      experiments/exp01_4bus.py, replicated in OpenDSS for
+      independent validation.
+    source_of_truth: experiments/exp01_4bus.py (commit 5b52241, 2105117 stage03)
+    paper_specified_parameters:
+      - transformer: "Yg-Delta, 6 MVA, 12.47/4.16 kV, R=0.01 pu, X=0.06 pu"
+        source: "project spec section 14, base paper (Jang, Kim & Kim, IEEE Access 2023, doi 10.1109/ACCESS.2023.3269503)"
+    reconstruction_assumptions:
+      - topology: "BUS1(slack)-line-BUS2-[xfmr]-BUS3-line-BUS4"
+        owner: "Member A (exp01_4bus.py)"
+      - line_impedances_pu: {line1: "0.01+j0.03", line2: "0.02+j0.02"}
+        owner: "Member A, not paper-specified"
+      - load_values_pu:
+          BUS2: {P: 0.05, Q: 0.02}
+          BUS3_caseA: {P: 0.10, Q: 0.04}
+          BUS4_caseA: {P: 0.15, Q: 0.06}
+        owner: "Member A, not paper-specified"
+      - system_mva_base: 6.0
+        note: >
+          NOT explicitly stated anywhere in the project spec or Member A's code
+          (their Ybus is unitless/per-unit with no declared base). Chosen
+          here as the transformer's own nameplate rating for the OpenDSS
+          conversion. CONFIRM WITH MEMBER A before trusting cross-validation
+          results — a wrong base here invalidates the comparison silently.
+      - load_pu_convention: "per-phase (applied identically to each of a,b,c)"
+        note: "Inferred from code structure — CONFIRM WITH MEMBER A."
+    retrieved_by: "Member E"
+    retrieved_date: "2026-08-29"
+    modifications: "None beyond OpenDSS syntax translation of Member A's parameters."
+    reproducibility: "Deterministic — no randomness in circuit definition."
+
+  ieee13_reconstruction:
+    description: >
+      Official IEEE 13-node test feeder (OpenDSS implementation), with
+      Jang, Kim & Kim (2023)'s modifications applied per the project spec
+      section 15, built directly on top of the official feeder's own
+      line/load/topology data rather than re-derived from scratch.
+    source_of_truth: >
+      src/model/ieee13_data.py (official data, verbatim transcription) +
+      experiments/exp02_13bus.py (paper modifications + reconstruction
+      assumptions, all documented in that module's docstring)
+    official_data_source:
+      url: "https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/IEEETestCases/13Bus/IEEE13Nodeckt.dss"
+      retrieved_date: "2026-09-10"
+      retrieved_by: "team (fetched per project spec section 13's cited source)"
+      note: "Cited directly in project spec section 13 as the project's canonical IEEE-13 source."
+    paper_specified_parameters:
+      - transformer_T1: "Yg-Delta, 5 MVA, 115/4.16 kV, R=0.08 pu, X=0.10 pu"
+        source: "project spec section 15 (Jang, Kim & Kim, IEEE Access 2023)"
+      - transformer_T2: "Delta-Delta, 0.5 MVA, 4.16/0.48 kV, R=0.02 pu, X=0.011 pu (own base)"
+        source: "project spec section 15"
+      - distributed_load_removed: true
+      - capacitor_banks_removed: true
+    reconstruction_assumptions:
+      - system_base: "S_BASE_MVA=5.0 (matches T1's own rating exactly); zone kV bases 115/4.16/0.48 match each transformer's nominal rating"
+        owner: "this reconstruction; not paper-specified but a standard, low-risk per-unit convention"
+      - seven_loads_discrepancy: >
+          the project spec states the paper's modified case has seven loads.
+          After removing the official file's own distributed-load
+          stand-in (Load.670a/b/c -- its own inline comment identifies
+          it as exactly that), EIGHT distinct load locations remain
+          (671, 634, 645, 646, 692, 675, 611, 652). The paper does not
+          specify which additional location to drop to reach seven, and
+          nothing in the project spec singles one out, so this reconstruction
+          keeps all eight rather than arbitrarily deleting one. OPEN
+          DISCREPANCY -- see exp02_13bus.py module docstring assumption A.
+        owner: "this reconstruction; documented gap, not resolved"
+      - delta_load_approximation: >
+          Delta-connected loads (official Load.671, Load.646, Load.692)
+          are approximated as an even wye-equivalent per-phase split,
+          because src/powerflow/mismatch.py only supports phase-to-
+          neutral constant-PQ injections, not true delta-branch current
+          stamping.
+        owner: "this reconstruction; see exp02_13bus.py assumption B"
+      - constant_pq_load_model: "All loads treated as OpenDSS Model=1 (constant P,Q) regardless of official per-load model number"
+        owner: "this reconstruction; see exp02_13bus.py assumption C"
+      - regulators_and_switch_merged: >
+          Voltage regulators Reg1/2/3 and the closed 671-692
+          sectionalizing switch are modeled as ideal (zero-impedance)
+          merges (RG60 -> 650, 692 -> 671) rather than stamped as
+          near-zero-impedance branches or discrete tap-control loops.
+        owner: "this reconstruction; see exp02_13bus.py assumption D"
+      - line_shunt_capacitance_omitted: true
+        owner: "this reconstruction; see exp02_13bus.py assumption E"
+    retrieved_by: "team"
+    retrieved_date: "2026-09-10"
+    modifications: "Paper modifications applied on top of official data; see paper_specified_parameters and reconstruction_assumptions above."
+    reproducibility: "Deterministic — no randomness in circuit definition."
+    validation_status: >
+      Jacobian finite-difference validated (E_J ~ 8.6e-11,
+      tests/test_ieee13.py). Direct solver fails (kappa_2 ~ 4.5e18 at flat
+      start) as expected: both T1 and T2 leave their secondary side
+      floating with no other ground path stamped anywhere -- this IS the
+      paper's phenomenon, not a reconstruction defect. The flat-start
+      Jacobian has EXACTLY 2 near-zero singular values (not 1): T1's
+      floating secondary contributes a network-wide common-mode null
+      direction, and T2's Delta-Delta connection independently floats bus
+      634 alone (a Delta-Delta transformer's stamped zero-sequence transfer
+      block is exactly zero, decoupling the two sides completely).
+      CROSS-VALIDATED against an independent OpenDSS solve of
+      data/raw/ieee13/ieee13_paper_reconstruction.dss
+      (experiments/exp02b_13bus_opendss_crosscheck.py): median line-to-line
+      relative error 6.6%, max 26.5%, concentrated at bus/phase-pairs
+      aligned with the 2-D near-null space (an expected consequence of two
+      independently-chosen regularizations -- this repo's Tikhonov
+      alpha=1e-8 vs. OpenDSS's internal ppm_antifloat -- picking different
+      particular solutions in a genuinely underdetermined subspace, not a
+      remaining bug). This cross-validation caught and fixed a real bug: an
+      earlier version of _accumulate_loads() in exp02_13bus.py normalized
+      per-phase load power against the full 3-phase S_base instead of
+      S_base/3, making every load ~3x too light. Confirmed via an isolated,
+      well-conditioned single-transformer OpenDSS comparison (no null-space
+      ambiguity there) that the fix reproduces OpenDSS to ~3e-6 pu. SVD and
+      RRQR agree tightly with each other and with Tikhonov at light load
+      (0.5x nominal) but OSCILLATE rather than converge at nominal load and
+      above on this severely ill-conditioned reconstruction -- Tikhonov
+      (alpha=1e-8) converges up to 1.25x nominal load before it also fails
+      at 1.5x. This solver-robustness-vs-load behavior is itself a
+      documented finding (experiments/exp_d_ieee13_investigation.py's
+      solver_robustness_study).
+
+  ieee37_reconstruction:
+    description: >
+      Official IEEE 37-node test feeder (OpenDSS implementation). Per
+      project spec section 16, the official topology already matches the
+      paper's description almost exactly (both transformers already
+      Delta-Delta, XFM secondary already unloaded), so this reconstruction
+      needs far less modification than IEEE-13.
+    source_of_truth: >
+      src/model/ieee37_data.py (official data, verbatim transcription) +
+      experiments/exp03_37bus.py (reconstruction decisions, all documented
+      in that module's docstring)
+    official_data_source:
+      master_url: "https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/IEEETestCases/37Bus/ieee37.dss"
+      linecodes_url: "https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/IEEETestCases/37Bus/IEEELineCodes.DSS"
+      retrieved_date: "2026-09-10"
+      retrieved_by: "team (fetched per project spec section 13's cited source)"
+    reconstruction_assumptions:
+      - system_base: "S_BASE_MVA=2.5 (matches SubXF's own rating exactly)"
+        owner: "this reconstruction; standard per-unit convention"
+      - line_length_unit: >
+          Official line lengths (e.g. "Length=0.96") carry no explicit
+          units= keyword; linecodes 721-724 are calibrated in ohms per
+          1000 ft. Verified (not assumed) by cross-checking an isolated
+          single-line OpenDSS circuit against this reconstruction's own
+          conversion before committing -- see git history, the same
+          investigation that caught the IEEE-13 per-phase load bug.
+        owner: "this reconstruction"
+      - delta_load_approximation: "All loads (every load in this feeder is delta-connected) approximated as wye-equivalent, same as IEEE-13 assumption B"
+        owner: "this reconstruction; see exp03_37bus.py assumption D"
+      - constant_pq_load_model: "All loads treated as OpenDSS Model=1 regardless of official per-load model number, same as IEEE-13 assumption C"
+        owner: "this reconstruction; see exp03_37bus.py assumption D"
+      - regulators_merged: "Open-delta regulators reg1a/reg1c and the Jumper line ideally merged (799r -> 799), same rationale as IEEE-13 assumption D"
+        owner: "this reconstruction; see exp03_37bus.py assumption C"
+      - xfm1_reactance_discrepancy: >
+          project spec section 17 flags a factor-of-10 discrepancy between
+          the paper's reported X~0.00181 pu and the official OpenDSS
+          model's Xhl=1.81% (=0.0181 pu on XFM1's own base). Not resolved
+          here: build_37bus_system()'s xfm1_xhl_percent parameter defaults
+          to the official sourced value (1.81) and accepts 0.181 as the
+          alternate paper-literal reading, per the project spec's explicit
+          instruction to maintain both variants rather than silently pick
+          one.
+        owner: "flagged in the project spec; not resolved by this reconstruction"
+    retrieved_by: "team"
+    retrieved_date: "2026-09-10"
+    modifications: "Minimal -- see reconstruction_assumptions above; no paper-specified transformer/load changes were needed for this feeder."
+    reproducibility: "Deterministic — no randomness in circuit definition."
+    validation_status: >
+      Jacobian finite-difference validated (E_J ~ 7.8e-11,
+      tests/test_ieee37.py). Direct solver fails (kappa_2 ~ 1.2e18 at flat
+      start) as expected: both transformers are Delta-Delta with no other
+      ground path stamped anywhere. The flat-start Jacobian has 4 near-zero
+      singular values (observed, not predicted by a fixed formula -- see
+      tests/test_ieee37.py). SVD and RRQR both converge cleanly at nominal
+      load (10 iterations) and agree to ~1.8e-11 -- UNLIKE the IEEE-13
+      reconstruction, this feeder does not exhibit SVD/RRQR oscillation at
+      nominal load (Tikhonov alpha=1e-8 does fail to converge here in 80
+      iterations, the reverse of IEEE-13's finding -- a concrete
+      demonstration that no single method/fixed-alpha choice is uniformly
+      best across feeders). CROSS-VALIDATED against an independent OpenDSS
+      solve (experiments/exp03b_37bus_opendss_crosscheck.py):
+      median line-to-line relative error 2.3%, max 6.5% -- substantially
+      tighter than IEEE-13's 6.6%/26.5%, consistent with this feeder's
+      null-space ambiguity mattering less to the overall solution.
+    quasi_radial_variant: >
+      Stretch goal (project spec section 18), generated programmatically by
+      build_37bus_system(quasi_radial=True) rather than a separate data
+      module, per that section's instruction. Adds three lines (718-733,
+      729-742, 736-741) with diagonal (zero-mutual-coupling) phase
+      impedance 0.01+j0.001 ohm/km, matching the paper's stated equal
+      zero/positive/negative-sequence impedance. The paper does not specify
+      these three lines' lengths; this reconstruction uses 0.15 km (~492
+      ft, an explicitly documented, non-paper-specified choice
+      approximating this feeder's median existing line length -- see
+      QUASI_RADIAL_ASSUMED_LENGTH_KM in exp03_37bus.py). Jacobian
+      FD-validated (E_J~4.6e-11); same 4 near-zero singular values as the
+      radial case (same floating transformers), higher raw kappa_2
+      (6.8e18 vs 1.2e18) from the added current paths; SVD still converges
+      cleanly. CROSS-VALIDATED against an independent OpenDSS solve of
+      data/raw/ieee37/ieee37_quasiradial_reconstruction.dss (the radial
+      .dss twin plus the same three added lines), via
+      experiments/exp03c_37bus_quasiradial_opendss_crosscheck.py: median
+      relative line-to-line error 2.26%, max 6.08% -- essentially
+      identical to the radial case's 2.3%/6.5% (unsurprising: three
+      well-conditioned loop-closing lines do not materially change the
+      already-dominant null-space-driven residual disagreement). The
+      quasi-radial lines' non-standard ohm/km unit convention (every other
+      line in this feeder uses ohm/1000ft) and 0.15 km length assumption
+      were independently verified against an isolated, well-conditioned
+      single-line OpenDSS sub-circuit before trusting this full-system
+      comparison (~1e-7 pu agreement there).
+
+  ieee69_reconstruction:
+    description: >
+      Modified IEEE/PG&E 69-bus feeder (project spec section 19), lowest
+      priority of the four feeders and explicitly a reconstruction, not an
+      exact paper reproduction. Built on the official MATPOWER case69.m
+      data (a balanced, single-phase-equivalent representation with no
+      native phase-domain structure), treated as a balanced three-phase
+      feeder (every branch diagonal/zero-mutual-coupling, every load split
+      identically across phases), with three Yg-Delta transformers
+      REPLACING three specific existing branches per the paper's table.
+    source_of_truth: >
+      src/model/ieee69_data.py (official data, verbatim transcription) +
+      experiments/exp04_69bus.py (reconstruction decisions, documented in
+      that module's docstring)
+    official_data_source:
+      url: "https://raw.githubusercontent.com/MATPOWER/matpower/master/data/case69.m"
+      retrieved_date: "2026-09-10"
+      retrieved_by: "team (fetched per project spec section 13/19's cited source)"
+      note: >
+        Original data: a portion of the PG&E distribution system, per
+        Baran & Wu (1989). Transcription independently confirmed by
+        totaling all 69 buses' load: 3.8021 MW / 2.6947 MVAr across
+        exactly 48 nonzero-load buses, matching project spec section 19's
+        "48 loads" and published case69 totals -- not something tuned to
+        match, a genuine cross-check.
+    paper_specified_parameters:
+      - transformers: >
+          Yg-Delta at 3-4 (10 MVA, 13.8 kV, R=0.0007 pu, X=0.0018 pu),
+          3-28 (10 MVA, 13.8 kV, R=0.0023 pu, X=0.0056 pu), 3-36 (10 MVA,
+          13.8 kV, R=0.0023 pu, X=0.0056 pu)
+        source: "project spec section 19 (Jang, Kim & Kim, IEEE Access 2023)"
+    reconstruction_assumptions:
+      - replace_not_add: >
+          The official case69 topology already has plain lines at exactly
+          3-4, 3-28, 3-36. This reconstruction reads the paper's "adding
+          three Yg-Delta transformers AT" these locations as REPLACING
+          those three branches, not adding new parallel ones -- the
+          paper's own wording does not unambiguously say either way.
+        owner: "this reconstruction; see exp04_69bus.py assumption A"
+      - voltage_base_discrepancy: >
+          The paper's transformer table gives 13.8 kV, but case69's actual
+          bus voltage base is 12.66 kV. This reconstruction uses 12.66 kV
+          throughout (the network's real operating voltage) and applies
+          the paper's R/X directly on the transformers' own 10 MVA rating.
+          FLAGGED, not resolved -- an apparent inconsistency in the
+          paper's own published data, similar in spirit to the IEEE-37
+          XFM1 reactance discrepancy (project spec section 17).
+        owner: "flagged in this reconstruction; not resolved"
+      - balanced_only: >
+          No 30%-unbalanced variant is built. project spec section 19 itself
+          states the paper's phase-specific imbalance construction rule
+          for this feeder is not documented anywhere available to this
+          project -- an explicitly acknowledged gap, not a silent omission.
+        owner: "documented gap per project spec section 19"
+      - system_base: "S_BASE_MVA=10.0 (matches both case69's own baseMVA and the added transformers' rating)"
+        owner: "this reconstruction; standard convention"
+    retrieved_by: "team"
+    retrieved_date: "2026-09-10"
+    modifications: "Three branches (3-4, 3-28, 3-36) replaced by Yg-Delta transformers; see paper_specified_parameters and reconstruction_assumptions above."
+    reproducibility: "Deterministic — no randomness in circuit definition."
+    validation_status: >
+      Jacobian finite-difference validated (E_J~7.0e-11,
+      tests/test_ieee69.py). UNLIKE IEEE-13/37, the direct solver
+      CONVERGES here (kappa_2~2.3e5 at flat start -- unaffected by load
+      magnitude, see the load-fix note below -- growing to ~5.7e10 during
+      iteration, severe but staying under the 1e12 guard). SVD and RRQR
+      also converge and agree with direct to ~1e-7. Ybus itself does have
+      an exact null direction across each transformer's floating
+      downstream region (verified numerically: a uniform complex voltage
+      shift across the 47-bus region behind the 3-4 transformer leaves
+      every current unchanged, residual ~1e-13), but the actual nonlinear
+      Jacobian's degeneracy along that direction is proportional to the
+      real current already flowing there (substantial, since this region
+      carries most of the feeder's load) -- so it is severely
+      ill-conditioned but not exactly singular, a genuine structural
+      difference from IEEE-13/37 rather than a reconstruction defect (see
+      tests/test_ieee69.py's docstrings for the fuller derivation).
+      CROSS-VALIDATED against an independent OpenDSS solve of
+      data/raw/ieee69/ieee69_paper_reconstruction.dss (generated
+      programmatically from this same src/model/ieee69_data.py, via
+      experiments/exp04b_69bus_opendss_crosscheck.py): median relative
+      line-to-line error 3.3e-8, max 8.2e-6 -- essentially machine
+      precision, far tighter than IEEE-13/37's cross-validation, consistent
+      with IEEE-69 having no exact null-space ambiguity (a unique solution
+      for both solvers to agree on, rather than each picking a different
+      point in an underdetermined subspace).
+
+      This cross-validation caught a second, independent per-unit load
+      bug (distinct from the earlier IEEE-13 one, though the same category
+      of mistake): build_69bus_system() applied BUS_LOADS_MW's per-bus
+      TOTAL three-phase Pd/Qd directly to each phase without first
+      dividing by 3, making every load exactly 3x too heavy. Caught via an
+      isolated single-branch, single-load OpenDSS sub-circuit at bus 61
+      (this feeder's single largest load, ~33% voltage error there before
+      the fix, ~1e-6 after) before trusting the full-system comparison.
+      Fixed; flat-start conditioning is unaffected (it does not depend on
+      load magnitude), but the converged solution, iteration-max kappa_2,
+      and this cross-validation are all updated to reflect the fix.
+
+  ieee118:
+    description: "Balanced computational scaling benchmark only, via pandapower.networks.case118()"
+    source: "pandapower (MATPOWER-derived case118)"
+    retrieved_by: "team"
+    retrieved_date: "2026-09-10"
+    note: "Used only for linear-solver runtime scaling (experiments/exp_e_ieee118_scaling.py) per project spec section 20 -- explicitly not evidence about the transformer-connection singularity this project otherwise studies."
